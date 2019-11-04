@@ -3,7 +3,13 @@ class TasksController < ApplicationController
   before_action :set_task, only: [:show, :edit, :update, :destroy]
   
   def index
-    @tasks = Task.all
+    if logged_in?
+      puts 'ログインできています。'
+      @tasks = current_user.tasks.order(id: :desc).page(params[:page])
+    else
+      flash.now[:danger] = 'ユーザ登録してください'
+      redirect_to controller: 'sessions', action: 'new'
+    end
   end
 
   def show
@@ -14,7 +20,7 @@ class TasksController < ApplicationController
   end
 
   def create
-    @task = Task.new(task_params)
+    @task = current_user.tasks.build(task_params)
 
     if @task.save
       flash[:success] = 'タスクが正常に保存されました'
@@ -43,6 +49,14 @@ class TasksController < ApplicationController
 
     flash[:success] = 'タスクは正常に削除されました'
     redirect_to tasks_url
+  end
+  
+  def current_user
+    @current_user ||= User.find_by(id: session[:user_id])
+  end
+
+  def logged_in?
+    !!current_user
   end
   
   private
