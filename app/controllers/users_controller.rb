@@ -1,4 +1,6 @@
 class UsersController < ApplicationController
+  before_action :require_user_logged_in, only: [:index, :show]
+  
   def index
     # id の降順にユーザの一覧を取得し、1ページにつき最大で25件取得する。
     @users = User.order(id: :desc).page(params[:page]).per(25)
@@ -18,7 +20,7 @@ class UsersController < ApplicationController
     if @user.save
       flash[:success] = 'ユーザを登録しました。'
       session[:user_id] = @user.id
-      redirect_to controller: 'tasks', action: 'index'
+      redirect_to root_url
     else
       flash.now[:danger] = 'ユーザの登録に失敗しました。'
       render :new

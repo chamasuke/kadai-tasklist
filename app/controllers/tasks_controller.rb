@@ -1,6 +1,7 @@
   
 class TasksController < ApplicationController
   before_action :set_task, only: [:show, :edit, :update, :destroy]
+  before_action :correct_user, only: [:show, :destroy]
   
   def index
     if logged_in?
@@ -8,7 +9,7 @@ class TasksController < ApplicationController
       @tasks = current_user.tasks.order(id: :desc).page(params[:page])
     else
       flash.now[:danger] = 'ユーザ登録してください'
-      redirect_to controller: 'sessions', action: 'new'
+      redirect_to login_url
     end
   end
 
@@ -16,7 +17,12 @@ class TasksController < ApplicationController
   end
 
   def new
-    @task = Task.new
+    if logged_in?
+      @task = Task.new
+    else
+      flash.now[:danger] = 'ログイン/ユーザー登録してください'
+      redirect_to root_url
+    end
   end
 
   def create
@@ -68,5 +74,17 @@ class TasksController < ApplicationController
   
   def task_params
     params.require(:task).permit(:content, :status)
+  end
+  
+  def correct_user
+    if logged_in?
+      @task = current_user.tasks.find_by(id: params[:id])
+      unless @task
+        redirect_to root_url
+      end
+    else
+      redirect_to root_url
+    end
+    
   end
 end
